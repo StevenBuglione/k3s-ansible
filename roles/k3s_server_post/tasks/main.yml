@@ -14,10 +14,15 @@
   tags: metallb
   when: kube_vip_lb_ip_range is not defined and (not cilium_bgp or cilium_iface is not defined) and (argo_cd_tag_version is not defined)
 
-- name: Deploy bitnami sealed-secrets
-  include_tasks: sealed-secrets.yml
+- name: Create and Deploy bitnami sealed-secrets cert to cluster
+  include_tasks: sealed-secrets-create-key.yml
   tags: sealed-secrets
-  when: sealed_secrets is defined
+  when: sealed_secrets_tag_version is defined and not sealed_secrets_provided_keys is not defined
+
+- name: Load existing bitnami sealed-secrets cert to cluster
+  include_tasks: sealed-secrets-load-key.yml
+  tags: sealed-secrets
+  when: sealed_secrets_tag_version is defined and sealed_secrets_provided_keys is defined
 
 - name: Deploy argo-cd manifest
   include_tasks: argo-cd.yml

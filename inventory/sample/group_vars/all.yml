@@ -108,6 +108,17 @@ argo_cd_project: "registry/projects/development/project-dev.yml"
 argo_cd_root_app: "registry/projects/development/root-app-dev.yml"
 argo_cd_admin_password: "password"
 
+#Sealed Secrets Configuration
+sealed_secrets_tag_version: "v0.16.0"
+sealed_secrets_namespace: "sealed-secrets"
+sealed_secrets_provided_keys: false
+sealed_secrets_private_key: "private.key"
+sealed_secrets_private_key_path: "./sealed-secrets-key/local/private.key"
+sealed_secrets_public_key: "public.crt"
+sealed_secrets_public_key_path: "./sealed-secrets-key/local/public.crt"
+sealed_secrets_key_size: 4096
+sealed_secrets_cert_days_valid: 365
+sealed_secrets_secret_name: "sealed-secrets-key"
 
 # Only enable if your nodes are proxmox LXC nodes, make sure to configure your proxmox nodes
 # in your hosts.ini file.
