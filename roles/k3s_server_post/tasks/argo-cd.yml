@@ -47,12 +47,12 @@
     state: absent
 
 
-- name: Test metallb-system resources for Layer 2 configuration (argo-cd)
-  command: >-
-    k3s kubectl -n metallb-system get {{ item }}
-  changed_when: false
-  run_once: true
-  when: metal_lb_mode == "layer2"
+- name: Wait for resources in metallb-system namespace to become live
+  ansible.builtin.command: k3s kubectl -n metallb-system get {{ item }}
+  register: result
+  until: result.rc == 0
+  retries: 20
+  delay: 20
   with_items:
     - IPAddressPool
     - L2Advertisement

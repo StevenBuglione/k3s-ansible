@@ -1,0 +1,4 @@
+sudo kubectl -n argocd exec -it "pod/argocd-server-7574cff9df-572wr" -- argocd account update-password --current-password "cSnpCryvX2mRE1Zm" --new-password "password"
+
+
+Unable to load data: error getting app project: error getting app project "k3s-argocd-boot-project-dev": appproject.argoproj.io "k3s-argocd-boot-project-dev" not found
