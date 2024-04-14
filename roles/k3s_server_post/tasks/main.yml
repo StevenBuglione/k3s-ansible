@@ -12,7 +12,12 @@
 - name: Deploy metallb pool
   include_tasks: metallb.yml
   tags: metallb
-  when: kube_vip_lb_ip_range is not defined and (not cilium_bgp or cilium_iface is not defined)
+  when: kube_vip_lb_ip_range is not defined and (not cilium_bgp or cilium_iface is not defined) and (argo_cd_tag_version is not defined)
+
+- name: Deploy argo-cd manifest
+  include_tasks: argo-cd.yml
+  tags: argocd
+  when: argo_cd_tag_version is defined
 
 - name: Remove tmp directory used for manifests
   file:

@@ -1,0 +1,58 @@
+---
+- name: "Create Argo CD namespace: argocd"
+  ansible.builtin.command: sudo kubectl create namespace argocd
+  ignore_errors: yes
+
+- name: "Apply Argo CD manifest to argocd namespace"
+  ansible.builtin.command: >
+    sudo kubectl apply -n argocd -f "{{ 'https://raw.githubusercontent.com/argoproj/argo-cd/' + argo_cd_tag_version + ( '/manifests/ha/install.yaml' if argo_cd_type_ha else '/manifests/install.yaml' ) }}"
+  when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+
+- name: "Create temp directory for Argo CD manifests"
+  ansible.builtin.file:
+    path: /tmp/k3s/argo
+    state: directory
+
+- name: "Download Argo-CD Project from GitHub"
+  get_url:
+    url: "https://raw.githubusercontent.com/{{ argo_cd_repo }}/{{ argo_cd_branch }}/{{ argo_cd_project }}"
+    dest: "/tmp/k3s/argo/project.yaml"
+
+- name: "Download Argo-CD Root Application from GitHub"
+  get_url:
+    url: "https://raw.githubusercontent.com/{{ argo_cd_repo }}/{{ argo_cd_branch }}/{{ argo_cd_root_app }}"
+    dest: "/tmp/k3s/argo/root-app.yaml"
+
+- name: "Apply Argo-CD Project from GitHub to Kubernetes cluster"
+  ansible.builtin.command: sudo kubectl apply -f /tmp/k3s/argo/project.yaml
+
+- name: "Apply Argo-CD Root Application to Kubernetes cluster"
+  ansible.builtin.command: sudo kubectl apply -f /tmp/k3s/argo/root-app.yaml
+
+- name: Install apache2-utils for argo-cd password change
+  ansible.builtin.apt:
+    name: apache2-utils
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Change Argo CD password
+  ansible.builtin.shell: >
+    sudo kubectl patch secret -n argocd argocd-secret -p '{"stringData": { "admin.password": "'$(htpasswd -bnBC 10 "" {{ argo_cd_admin_password }} | tr -d ':\n')'"}}'
+  become: yes
+
+- name: "Remove tmp directory used for manifests"
+  ansible.builtin.file:
+    path: /tmp/k3s
+    state: absent
+
+
+- name: Test metallb-system resources for Layer 2 configuration (argo-cd)
+  command: >-
+    k3s kubectl -n metallb-system get {{ item }}
+  changed_when: false
+  run_once: true
+  when: metal_lb_mode == "layer2"
+  with_items:
+    - IPAddressPool
+    - L2Advertisement
